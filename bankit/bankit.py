@@ -38,16 +38,19 @@ def main():
     #print 'Outgoing request:'
     #print request.get_full_url()
     try:
-        response1 = opener.open('https://www.ufcu.org')
+        #response1 = opener.open('https://www.ufcu.org')
         #print response1.read()
         #import pdb; pdb.set_trace()
 
         f = opener.open(request)
+	response = f.read()
     except Exception as e:
         print 'exception', e.args
+    response2 = urllib2.Request("https://ondemand.ufcu.org/HBNET/accountinfo/AccountHistory.aspx", data=urllib.urlencode(data), headers=headers)
+    f = opener.open(request)
     response = f.read()
     print response
-
+    
 if __name__ == '__main__':
     #print ("Running from command line")
     main()

@@ -3,3 +3,6 @@ include
 lib
 local
 man
+conf
+*~
+*.swp
