@@ -1,6 +1,11 @@
 import os
+import sys
+import re
+import time
 import ConfigParser
 import argparse
+import pickle
+from transaction import Transaction
 
 
 def main():
@@ -11,6 +16,12 @@ def main():
         config = get_config(BANKIT_DIR, args.config)
     else:
         config = get_config(BANKIT_DIR)
+    if args.pickle:
+        pickle_file = args.pickle
+    elsif config.get('DEFAULT', 'pickle_file'):
+        pickle_file = os.path.join(BANKIT_DIR, '..', config.get('DEFAULT', 'data_dir'), config.get('DEFAULT', 'pickle_file'))
+    else:
+        
     if args.read:
         if args.data:
             data_file = args.data
@@ -24,10 +35,21 @@ def main():
 
 def read_data(data_file):
     fd = open(data_file, 'r')
-    line = fd.read()
+    line = fd.readline()
+    transactions = []
     while line:
         print line
-        line = fd.read()
+        search_result = re.search(r'(\d{2}/\d{2}/\d{4}),"(.*)",(-?\$?\d+\.\d{2}?),(-?\$?\d+\.\d{2}?)', line)
+        if not search_result:
+            search_result = re.search(r'(\d{2}/\d{2}/\d{4}),(.*),(-?\$?\d+\.\d{2}?),(-?\$?\d+\.\d{2}?)', line)
+        date = time.strptime(search_result.group(1), "%m/%d/%Y")
+        description = search_result.group(2)
+        amount = search_result.group(3)
+        remaining_amount = search_result.group(4)
+        transactions.append(Transaction(date, description, amount, remaining_amount))
+        line = fd.readline()
+    with open('transactions.pickle', 'wb') as file:
+        pickle.dump(transactions, file)
 
 
 def get_config(root_dir, config_file=''):
@@ -43,6 +65,7 @@ def get_args():
     parser.add_argument('-r', '--read', help='Read in data file', action='store_true', )
     parser.add_argument('-c', '--config', help='Specify config file')
     parser.add_argument('-d', '--data',  help='Specify data file')
+    parser.add_argument('-p', '--pickle',  help='Specify pickle file')
     return parser.parse_args()
 
 
