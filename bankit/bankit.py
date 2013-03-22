@@ -1,5 +1,4 @@
 import os
-import sys
 import re
 import time
 import ConfigParser
@@ -18,27 +17,30 @@ def main():
         config = get_config(BANKIT_DIR)
     if args.pickle:
         pickle_file = args.pickle
-    elsif config.get('DEFAULT', 'pickle_file'):
+    elif config.get('DEFAULT', 'pickle_file'):
         pickle_file = os.path.join(BANKIT_DIR, '..', config.get('DEFAULT', 'data_dir'), config.get('DEFAULT', 'pickle_file'))
-    else:
-        
     if args.read:
         if args.data:
             data_file = args.data
         else:
             data_file = os.path.join(BANKIT_DIR, '..', config.get('DEFAULT', 'data_dir'), config.get('DEFAULT', 'data_file'))
-        read_data(data_file)
+        read_spreadsheet(data_file, pickle_file)
     else:
+        read_transactions(pickle_file)
         print "reading and interacting"
-    print data_file
 
 
-def read_data(data_file):
+def read_transactions(pickle_file):
+    with open(pickle_file, 'rb') as file:
+        transactions = pickle.load(file)
+    return transactions
+
+
+def read_spreadsheet(data_file, pickle_file):
     fd = open(data_file, 'r')
     line = fd.readline()
     transactions = []
     while line:
-        print line
         search_result = re.search(r'(\d{2}/\d{2}/\d{4}),"(.*)",(-?\$?\d+\.\d{2}?),(-?\$?\d+\.\d{2}?)', line)
         if not search_result:
             search_result = re.search(r'(\d{2}/\d{2}/\d{4}),(.*),(-?\$?\d+\.\d{2}?),(-?\$?\d+\.\d{2}?)', line)
@@ -48,7 +50,7 @@ def read_data(data_file):
         remaining_amount = search_result.group(4)
         transactions.append(Transaction(date, description, amount, remaining_amount))
         line = fd.readline()
-    with open('transactions.pickle', 'wb') as file:
+    with open(pickle_file, 'wb') as file:
         pickle.dump(transactions, file)
 
 
