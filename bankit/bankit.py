@@ -5,7 +5,7 @@ import ConfigParser
 import argparse
 import pickle
 from transaction import Transaction
-
+from oracle import Oracle
 
 def main():
     data_file = ''
@@ -26,7 +26,8 @@ def main():
             data_file = os.path.join(BANKIT_DIR, '..', config.get('DEFAULT', 'data_dir'), config.get('DEFAULT', 'data_file'))
         read_spreadsheet(data_file, pickle_file)
     else:
-        read_transactions(pickle_file)
+        transactions = read_transactions(pickle_file)
+        oracle = Oracle(transactions)
         print "reading and interacting"
 
 
